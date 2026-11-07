@@ -94,6 +94,10 @@ if HAS_PYDANTIC:
         def page_count(self) -> int:
             return len(self.pages)
 
+        @property
+        def total_pages(self) -> int:
+            return len(self.pages)
+
 else:
     @dataclass
     class Config:
@@ -130,4 +134,8 @@ else:
 
         @property
         def page_count(self) -> int:
+            return len(self.pages)
+
+        @property
+        def total_pages(self) -> int:
             return len(self.pages)
