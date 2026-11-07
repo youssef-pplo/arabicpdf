@@ -3,7 +3,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/arabicpdf.svg?color=blue)](https://pypi.org/project/arabicpdf/)
 [![Python versions](https://img.shields.io/pypi/pyversions/arabicpdf.svg)](https://pypi.org/project/arabicpdf/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![CI](https://github.com/arabicpdf/arabicpdf/actions/workflows/ci.yml/badge.svg)](https://github.com/arabicpdf/arabicpdf/actions)
+[![CI](https://github.com/youssef-pplo/arabicpdf/actions/workflows/ci.yml/badge.svg)](https://github.com/youssef-pplo/arabicpdf/actions)
 
 **Convert any Arabic PDF to clean text with near-100% accuracy. Lightweight. 100% Local. No GPU required.**
 

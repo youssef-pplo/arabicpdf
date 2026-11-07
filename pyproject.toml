@@ -10,7 +10,7 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
 authors = [
-    { name = "ArabicPDF Contributors", email = "contributors@arabicpdf.org" }
+    { name = "Youssef", email = "youssef@users.noreply.github.com" }
 ]
 keywords = [
     "arabic",
@@ -78,11 +78,11 @@ all = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/arabicpdf/arabicpdf"
-Documentation = "https://github.com/arabicpdf/arabicpdf#readme"
-Repository = "https://github.com/arabicpdf/arabicpdf.git"
-Issues = "https://github.com/arabicpdf/arabicpdf/issues"
-Changelog = "https://github.com/arabicpdf/arabicpdf/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/youssef-pplo/arabicpdf"
+Documentation = "https://github.com/youssef-pplo/arabicpdf#readme"
+Repository = "https://github.com/youssef-pplo/arabicpdf.git"
+Issues = "https://github.com/youssef-pplo/arabicpdf/issues"
+Changelog = "https://github.com/youssef-pplo/arabicpdf/blob/main/CHANGELOG.md"
 
 [project.scripts]
 arabicpdf = "arabicpdf.cli:main"
