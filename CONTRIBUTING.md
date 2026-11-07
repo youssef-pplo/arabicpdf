@@ -21,17 +21,10 @@ source .venv/bin/activate
 ### 3. Install in editable mode with development dependencies
 ```bash
 pip install --upgrade pip
-pip install -e ".[dev,paddle]"
+pip install -e ".[dev]"
 ```
 
-### 4. Install system dependencies (Tesseract & Poppler)
-```bash
-# Ubuntu/Debian
-sudo apt update && sudo apt install -y tesseract-ocr tesseract-ocr-ara hunspell-ar poppler-utils
-
-# macOS
-brew install tesseract tesseract-lang poppler hunspell
-```
+> **Note:** `arabicpdf` has **zero required system dependencies**. All core libraries, font fixers, and Arabic dictionaries are bundled directly in pure Python and precompiled wheels. If you wish to test with external Tesseract OCR as an additional engine, you may optionally install `tesseract-ocr` on your system.
 
 ---
 

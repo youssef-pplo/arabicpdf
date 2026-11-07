@@ -17,9 +17,12 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 try:
-    import fitz  # PyMuPDF
+    import pymupdf as fitz
 except ImportError:
-    fitz = None
+    try:
+        import fitz  # PyMuPDF
+    except ImportError:
+        fitz = None
 
 from arabicpdf.config import PageType
 from arabicpdf.arabic_utils import is_valid_arabic, arabic_char_ratio, char_entropy

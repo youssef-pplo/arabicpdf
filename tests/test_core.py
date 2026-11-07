@@ -5,10 +5,14 @@ import unittest
 from pathlib import Path
 
 try:
-    import fitz  # PyMuPDF
+    import pymupdf as fitz
     FITZ_AVAILABLE = True
 except ImportError:
-    FITZ_AVAILABLE = False
+    try:
+        import fitz
+        FITZ_AVAILABLE = True
+    except ImportError:
+        FITZ_AVAILABLE = False
 
 
 class TestCore(unittest.TestCase):

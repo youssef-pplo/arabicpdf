@@ -320,12 +320,15 @@ def render_pdf_page(pdf_path: str, page_num: int, dpi: int = 300) -> np.ndarray:
         If *pdf_path* does not exist.
     """
     try:
-        import fitz  # PyMuPDF
+        import pymupdf as fitz
     except ImportError:
-        raise ImportError(
-            "PyMuPDF is required for PDF rendering. "
-            "Install it with: pip install pymupdf"
-        )
+        try:
+            import fitz  # PyMuPDF
+        except ImportError:
+            raise ImportError(
+                "PyMuPDF is required for PDF rendering. "
+                "Install it with: pip install pymupdf"
+            )
 
     doc = fitz.open(pdf_path)
 

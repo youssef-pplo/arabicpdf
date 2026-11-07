@@ -54,18 +54,12 @@ class TesseractEngine:
         try:
             import pytesseract  # noqa: F401
         except ImportError:
-            logger.warning(
-                "pytesseract is not installed. "
-                "Install it with: pip install pytesseract"
-            )
+            logger.debug("pytesseract is not installed; Tesseract engine disabled.")
             return
 
         # 2. Check the tesseract binary
         if shutil.which("tesseract") is None:
-            logger.warning(
-                "The 'tesseract' binary was not found on PATH. "
-                "Install Tesseract OCR: https://github.com/tesseract-ocr/tesseract"
-            )
+            logger.debug("The 'tesseract' binary was not found on PATH; Tesseract engine disabled.")
             return
 
         # 3. Check Arabic language pack
@@ -78,13 +72,10 @@ class TesseractEngine:
             )
             langs = result.stdout.lower()
             if "ara" not in langs:
-                logger.warning(
-                    "Tesseract Arabic language pack ('ara') is not installed. "
-                    "Install it, e.g.: sudo apt install tesseract-ocr-ara"
-                )
+                logger.debug("Tesseract Arabic language pack ('ara') is not installed.")
                 return
         except Exception as exc:  # noqa: BLE001
-            logger.warning("Could not verify Tesseract languages: %s", exc)
+            logger.debug("Could not verify Tesseract languages: %s", exc)
             return
 
         self._available = True
@@ -166,10 +157,7 @@ class PaddleOCREngine:
             self._available = True
             logger.debug("PaddleOCR package found; engine will be loaded on first use.")
         except ImportError:
-            logger.warning(
-                "paddleocr is not installed. "
-                "Install it with: pip install paddleocr"
-            )
+            logger.debug("paddleocr is not installed.")
 
     # -- properties ----------------------------------------------------------
 
@@ -377,9 +365,9 @@ def get_available_engines() -> list[TesseractEngine | PaddleOCREngine | SuryaEng
             available.append(engine)
 
     if not available:
-        logger.warning(
-            "No OCR engines are available. Install at least one of: "
-            "pytesseract + tesseract-ocr-ara, paddleocr, surya-ocr"
+        logger.debug(
+            "No local OCR engines available (PaddleOCR, Tesseract, Surya). "
+            "Scanned image pages without text layer will require: pip install \"arabicpdf[paddle]\""
         )
     else:
         names = [type(e).__name__ for e in available]

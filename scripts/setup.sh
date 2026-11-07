@@ -1,37 +1,26 @@
 #!/usr/bin/env bash
-# System dependencies setup script for ArabicPDF
+# Development setup script for ArabicPDF (Zero system dependencies required!)
 set -e
 
-echo "=== ArabicPDF System Setup ==="
+echo "=== ArabicPDF Development Setup ==="
 
-if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    if command -v apt-get &> /dev/null; then
-        echo "Detected Debian/Ubuntu system."
-        echo "Installing Tesseract with Arabic support, Hunspell with Arabic dictionary, and Poppler..."
-        sudo apt-get update
-        sudo apt-get install -y tesseract-ocr tesseract-ocr-ara hunspell-ar poppler-utils libhunspell-dev
-        echo "System packages installed successfully."
-    elif command -v dnf &> /dev/null; then
-        echo "Detected Fedora/RHEL system."
-        sudo dnf install -y tesseract tesseract-langpack-ara hunspell-ar poppler-utils hunspell-devel
-        echo "System packages installed successfully."
-    elif command -v pacman &> /dev/null; then
-        echo "Detected Arch Linux system."
-        sudo pacman -S --noconfirm tesseract tesseract-data-ara poppler hunspell
-        echo "System packages installed successfully."
-    else
-        echo "Unsupported Linux package manager. Please manually install: tesseract-ocr, tesseract-ocr-ara, hunspell-ar, poppler-utils"
-    fi
-elif [[ "$OSTYPE" == "darwin"* ]]; then
-    if command -v brew &> /dev/null; then
-        echo "Detected macOS system with Homebrew."
-        brew install tesseract tesseract-lang poppler hunspell
-        echo "Homebrew packages installed successfully."
-    else
-        echo "Homebrew not found. Please install Homebrew or manually install tesseract, poppler, hunspell."
-    fi
-else
-    echo "Unsupported OS. For Windows, please install Tesseract with Arabic language pack and add it to your PATH."
+# Check python version
+PYTHON_BIN="${PYTHON:-python3}"
+if ! command -v "$PYTHON_BIN" &> /dev/null; then
+    echo "Error: $PYTHON_BIN not found. Please install Python 3.10 or higher."
+    exit 1
 fi
 
-echo "=== Setup complete ==="
+echo "Creating virtual environment in .venv..."
+"$PYTHON_BIN" -m venv .venv
+source .venv/bin/activate
+
+echo "Upgrading pip and installing arabicpdf in editable mode..."
+pip install --upgrade pip
+pip install -e ".[dev]"
+
+echo ""
+echo "=== ArabicPDF is ready! ==="
+echo "Activate environment: source .venv/bin/activate"
+echo "Run tests: python -m unittest discover -s tests -v"
+echo "Convert a PDF: arabicpdf convert document.pdf"

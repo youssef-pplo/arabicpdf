@@ -17,7 +17,70 @@ from arabicpdf.arabic_utils import (
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Hunspell wrapper (optional dependency)
+# Built-in Arabic dictionary (zero system dependencies, pure Python)
+# ---------------------------------------------------------------------------
+
+import gzip
+from pathlib import Path
+
+_BUILTIN_WORDS: Optional[set[str]] = None
+
+
+def _get_builtin_words() -> set[str]:
+    """Lazily load the bundled Arabic dictionary (290,000+ words)."""
+    global _BUILTIN_WORDS
+    if _BUILTIN_WORDS is not None:
+        return _BUILTIN_WORDS
+
+    dict_path = Path(__file__).resolve().parent / "data" / "arabic_words.txt.gz"
+    if dict_path.is_file():
+        try:
+            with gzip.open(dict_path, "rt", encoding="utf-8") as f:
+                _BUILTIN_WORDS = {line.strip() for line in f if line.strip()}
+            logger.debug(
+                "Loaded %d words from built-in Arabic lexicon.",
+                len(_BUILTIN_WORDS),
+            )
+            return _BUILTIN_WORDS
+        except Exception as exc:
+            logger.debug("Could not read built-in dictionary: %s", exc)
+
+    _BUILTIN_WORDS = set()
+    return _BUILTIN_WORDS
+
+
+def is_known_arabic_word(word: str) -> bool:
+    """Check if word is recognized in the built-in Arabic dictionary."""
+    words = _get_builtin_words()
+    if not words:
+        checker = _get_hunspell()
+        if checker is not None:
+            try:
+                return checker.spell(word)
+            except Exception:
+                return True
+        return True
+
+    if word in words:
+        return True
+
+    # Common Arabic attached prefixes
+    for prefix in ("وال", "فال", "بال", "كال", "لل", "ال", "و", "ف", "ب", "ك", "ل"):
+        if word.startswith(prefix) and len(word) > len(prefix) + 1:
+            if word[len(prefix) :] in words:
+                return True
+
+    # Common Arabic attached suffixes
+    for suffix in ("ها", "هم", "هن", "نا", "كم", "كن", "ه", "ي", "ة"):
+        if word.endswith(suffix) and len(word) > len(suffix) + 1:
+            if word[: -len(suffix)] in words:
+                return True
+
+    return False
+
+
+# ---------------------------------------------------------------------------
+# Hunspell wrapper (optional fallback if system dictionary is installed)
 # ---------------------------------------------------------------------------
 
 _hunspell_checker = None
@@ -25,7 +88,7 @@ _hunspell_available: Optional[bool] = None
 
 
 def _get_hunspell():
-    """Lazily load Hunspell Arabic dictionary."""
+    """Lazily load system Hunspell Arabic dictionary if installed."""
     global _hunspell_checker, _hunspell_available
 
     if _hunspell_available is not None:
@@ -34,7 +97,6 @@ def _get_hunspell():
     try:
         import hunspell as _hunspell_mod
 
-        # Try common paths for Arabic dictionary
         dict_paths = [
             ("/usr/share/hunspell/ar.aff", "/usr/share/hunspell/ar.dic"),
             ("/usr/share/myspell/ar.aff", "/usr/share/myspell/ar.dic"),
@@ -48,36 +110,22 @@ def _get_hunspell():
             try:
                 _hunspell_checker = _hunspell_mod.HunSpell(dic, aff)
                 _hunspell_available = True
-                logger.info("Hunspell Arabic dictionary loaded from %s", dic)
+                logger.debug("Hunspell Arabic dictionary loaded from %s", dic)
                 return _hunspell_checker
             except Exception:
                 continue
 
-        logger.warning(
-            "Hunspell is installed but no Arabic dictionary found. "
-            "Install it: sudo apt install hunspell-ar"
-        )
         _hunspell_available = False
         return None
 
     except ImportError:
-        logger.info(
-            "pyhunspell not installed. Spell correction disabled. "
-            'Install with: pip install "arabicpdf[hunspell]"'
-        )
         _hunspell_available = False
         return None
 
 
 def hunspell_check(word: str) -> bool:
-    """Check if a word is valid according to Hunspell."""
-    checker = _get_hunspell()
-    if checker is None:
-        return True  # If no checker, assume valid
-    try:
-        return checker.spell(word)
-    except Exception:
-        return True
+    """Check if a word is valid according to the dictionary."""
+    return is_known_arabic_word(word)
 
 
 def hunspell_suggest(word: str) -> list[str]:

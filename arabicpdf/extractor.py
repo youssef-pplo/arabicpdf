@@ -102,13 +102,16 @@ def extract_with_pymupdf(
         FileNotFoundError: If *pdf_path* does not exist.
     """
     try:
-        import fitz  # type: ignore[import-untyped]
+        import pymupdf as fitz
     except ImportError:
-        raise ImportError(
-            "The 'PyMuPDF' package is required for PDF text extraction "
-            "but is not installed.  Install it with:\n"
-            "    pip install PyMuPDF"
-        )
+        try:
+            import fitz  # type: ignore[import-untyped]
+        except ImportError:
+            raise ImportError(
+                "The 'PyMuPDF' package is required for PDF text extraction "
+                "but is not installed.  Install it with:\n"
+                "    pip install PyMuPDF"
+            )
 
     pdf = Path(pdf_path)
     if not pdf.is_file():

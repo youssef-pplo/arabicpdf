@@ -7,9 +7,12 @@ from pathlib import Path
 from typing import Optional
 
 try:
-    import fitz  # PyMuPDF
+    import pymupdf as fitz
 except ImportError:
-    fitz = None
+    try:
+        import fitz  # PyMuPDF
+    except ImportError:
+        fitz = None
 
 from arabicpdf.config import (
     Config,
@@ -87,7 +90,7 @@ def convert(
     # Get available OCR engines
     available_engines = get_available_engines()
     if not available_engines:
-        logger.warning(
+        logger.debug(
             "No local OCR engines available (Tesseract/PaddleOCR). "
             "Scanned or corrupted pages will rely on fallback direct extraction."
         )
