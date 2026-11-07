@@ -1,0 +1,107 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "arabicpdf"
+version = "0.1.0"
+description = "Convert any Arabic PDF to clean text with near-100% accuracy. Lightweight. 100% Local. No GPU required."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "ArabicPDF Contributors", email = "contributors@arabicpdf.org" }
+]
+keywords = [
+    "arabic",
+    "pdf",
+    "ocr",
+    "text-extraction",
+    "rtl",
+    "tashkeel",
+    "arabic-nlp",
+    "arabic-pdf",
+    "document-processing",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Text Processing",
+    "Topic :: Text Processing :: Linguistic",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Image Recognition",
+    "Natural Language :: Arabic",
+]
+
+dependencies = [
+    "pymupdf>=1.24",
+    "qalam>=0.1",
+    "opencv-python-headless>=4.9",
+    "pytesseract>=0.3",
+    "arabic-reshaper>=3.0",
+    "python-bidi>=0.6",
+    "numpy>=1.26",
+    "Pillow>=10.0",
+    "pydantic>=2.5",
+    "tqdm>=4.66",
+]
+
+[project.optional-dependencies]
+paddle = [
+    "paddleocr>=2.8",
+    "paddlepaddle<3.0",
+]
+surya = [
+    "surya-ocr>=0.8",
+]
+hunspell = [
+    "pyhunspell>=0.5",
+]
+camel = [
+    "camel-tools>=1.5",
+]
+dev = [
+    "pytest>=8.0",
+    "build>=1.0",
+    "twine>=5.0",
+]
+all = [
+    "arabicpdf[paddle,surya,hunspell,camel]",
+]
+
+[project.urls]
+Homepage = "https://github.com/arabicpdf/arabicpdf"
+Documentation = "https://github.com/arabicpdf/arabicpdf#readme"
+Repository = "https://github.com/arabicpdf/arabicpdf.git"
+Issues = "https://github.com/arabicpdf/arabicpdf/issues"
+Changelog = "https://github.com/arabicpdf/arabicpdf/blob/main/CHANGELOG.md"
+
+[project.scripts]
+arabicpdf = "arabicpdf.cli:main"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/arabicpdf",
+    "/scripts",
+    "/tests",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "pyproject.toml",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["arabicpdf"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
