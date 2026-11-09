@@ -15,7 +15,7 @@ We take the security of ArabicPDF seriously. Because ArabicPDF is designed to ru
 If you discover a security vulnerability (such as an arbitrary code execution vector via maliciously crafted PDF files), please report it responsibly:
 
 1. **Do not open a public issue.**
-2. Send an email to `security@arabicpdf.org` with:
+2. Send an email to `youssefdev74@gmail.com` with:
    - A description of the vulnerability.
    - Steps to reproduce or a minimal proof-of-concept.
    - Potential impact.
