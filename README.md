@@ -89,12 +89,21 @@ arabicpdf convert document.pdf
 # Save extracted text to a file
 arabicpdf convert document.pdf -o output.txt
 
+# Hide progress (for scripts or quiet runs)
+arabicpdf convert document.pdf -o output.txt --no-progress
+
 # Extract specific page range with custom DPI
 arabicpdf convert document.pdf --pages 1-5 --dpi 400 -o output.txt
 
 # Inspect PDF structure and classification without full OCR
 arabicpdf inspect document.pdf
 ```
+
+Conversions show a progress bar with the percentage of selected pages completed,
+page count, elapsed time, and the current step (extraction, OCR, or spell
+correction). The elapsed timer keeps updating in the terminal during slow steps.
+Progress is written to stderr, keeping stdout and output files clean. Python API
+calls remain silent unless a `progress_callback` is passed to `convert()`.
 
 ---
 

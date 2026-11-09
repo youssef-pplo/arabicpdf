@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.1] - 2026-11-09
+
+### Added
+- CLI conversion progress with page percentage, current processing stage, and a live elapsed timer.
+- `--no-progress` to hide progress output and an optional `convert()` progress callback for Python callers.
+
 ## [0.1.0] - 2026-11-07
 
 ### Added

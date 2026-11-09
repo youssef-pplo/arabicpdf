@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "arabicpdf"
-version = "0.1.0"
+version = "0.1.1"
 description = "Convert any Arabic PDF to clean text with near-100% accuracy. Lightweight. 100% Local. No GPU required."
 readme = "README.md"
 license = "MIT"

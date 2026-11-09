@@ -5,9 +5,56 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+from threading import Event, Thread
 
-from arabicpdf import __version__, convert, to_text, Config, Mode
+from tqdm import tqdm
+
+from arabicpdf import __version__, convert, Config, Mode
 from arabicpdf.detector import classify_document
+
+
+class _ConversionProgress:
+    """Page progress with a live elapsed timer during long OCR/correction calls."""
+
+    def __init__(self, enabled: bool = True) -> None:
+        self._stopped = Event()
+        self._bar = tqdm(
+            total=None,
+            desc="Preparing conversion",
+            unit="page",
+            file=sys.stderr,
+            disable=not enabled,
+            dynamic_ncols=True,
+            mininterval=0.2,
+        )
+        # Captured output gets stage updates, without repeated timer lines.
+        self._live = enabled and sys.stderr.isatty()
+
+    def __enter__(self) -> _ConversionProgress:
+        if self._live:
+            self._thread = Thread(target=self._refresh, daemon=True)
+            self._thread.start()
+        return self
+
+    def _refresh(self) -> None:
+        while not self._stopped.wait(0.5):
+            self._bar.refresh()
+
+    def update(self, completed: int, total: int, stage: str) -> None:
+        self._bar.total = total
+        self._bar.set_description_str(stage, refresh=False)
+        self._bar.update(completed - self._bar.n)
+        self._bar.refresh()
+
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        self._stopped.set()
+        if self._live:
+            self._thread.join()
+        status = "Done" if exc_type is None else "Failed"
+        if exc_type is not None and issubclass(exc_type, KeyboardInterrupt):
+            status = "Cancelled"
+        self._bar.set_description_str(status)
+        self._bar.close()
 
 
 def _parse_pages(pages_str: str | None) -> list[int] | None:
@@ -80,6 +127,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Print detailed page-level extraction metadata",
     )
+    convert_parser.add_argument(
+        "--no-progress",
+        action="store_true",
+        help="Hide the conversion progress bar",
+    )
 
     # Command: inspect / info
     inspect_parser = subparsers.add_parser(
@@ -104,6 +156,7 @@ def main(argv: list[str] | None = None) -> int:
             args.normalize_alef = False
             args.no_spell_check = False
             args.details = False
+            args.no_progress = False
         else:
             parser.print_help()
             return 1
@@ -139,7 +192,11 @@ def main(argv: list[str] | None = None) -> int:
             render_dpi=args.dpi,
         )
 
-        result = convert(str(pdf_file), config=cfg)
+        with _ConversionProgress(enabled=not args.no_progress) as progress:
+            result = convert(
+                str(pdf_file), config=cfg,
+                progress_callback=progress.update if not args.no_progress else None,
+            )
 
         if args.details:
             sys.stderr.write(f"Processed {result.page_count} page(s). Document confidence: {result.confidence*100:.1f}%\n")

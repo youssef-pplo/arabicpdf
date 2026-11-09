@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 try:
     import pymupdf as fitz
@@ -36,6 +36,8 @@ logger = logging.getLogger(__name__)
 def convert(
     pdf_path: str | Path,
     config: Optional[Config] = None,
+    *,
+    progress_callback: Callable[[int, int, str], None] | None = None,
 ) -> ConversionResult:
     """Convert an Arabic PDF file into text with detailed metadata.
 
@@ -43,6 +45,9 @@ def convert(
         pdf_path: Path to the input PDF file.
         config: Optional configuration settings. If omitted, default
             balanced configuration is used.
+        progress_callback: Optional callback receiving (completed_pages,
+            total_selected_pages, current_stage). Called before slow stages
+            and after each completed page. Conversion is silent by default.
 
     Returns:
         ConversionResult containing combined text, per-page results,
@@ -71,6 +76,8 @@ def convert(
     doc.close()
 
     if total_pages == 0:
+        if progress_callback is not None:
+            progress_callback(0, 0, "No pages to process")
         return ConversionResult(text="", pages=[], confidence=1.0)
 
     # Determine pages to process (1-indexed for user)
@@ -87,7 +94,12 @@ def convert(
 
     page_results: list[PageResult] = []
 
+    def report(stage: str) -> None:
+        if progress_callback is not None:
+            progress_callback(len(page_results), len(selected_pages), stage)
+
     # Get available OCR engines
+    report("Checking OCR engines")
     available_engines = get_available_engines()
     if not available_engines:
         logger.debug(
@@ -100,6 +112,7 @@ def convert(
         flags: list[str] = []
 
         # 1. Classify page
+        report(f"Page {page_num}: classifying")
         classification = classify_page(str(path), page_num)
         page_type = classification.page_type
 
@@ -109,6 +122,7 @@ def convert(
 
         # 2. Try direct extraction first (Qalam excels even on corrupted digital PDFs)
         direct_success = False
+        report(f"Page {page_num}: extracting text")
         try:
             direct_res = extract_direct(str(path), page_idx)
             if direct_res and direct_res[0][1]:
@@ -145,7 +159,9 @@ def convert(
             else:
                 try:
                     # Render high-resolution image
+                    report(f"Page {page_num}: rendering for OCR")
                     raw_img = render_pdf_page(str(path), page_idx, dpi=cfg.render_dpi)
+                    report(f"Page {page_num}: preprocessing image")
                     if preprocessor is None:
                         preprocessor = ArabicPreprocessor()
                     preprocessed_img = preprocessor.process(raw_img, strategy="default")
@@ -154,12 +170,14 @@ def convert(
                     ocr_results: list[OCRResult] = []
                     if cfg.mode == Mode.FAST:
                         # Use first available engine
+                        report(f"Page {page_num}: OCR ({type(available_engines[0]).__name__})")
                         res = available_engines[0].ocr(preprocessed_img)
                         if res.text:
                             ocr_results.append(res)
                     else:
                         # Balanced / Max accuracy: run all available engines
                         for engine in available_engines:
+                            report(f"Page {page_num}: OCR ({type(engine).__name__})")
                             try:
                                 res = engine.ocr(preprocessed_img)
                                 if res.text.strip():
@@ -179,6 +197,7 @@ def convert(
                         method = f"ocr_{ocr_results[0].engine}"
                     elif len(ocr_results) > 1:
                         # Multi-engine consensus voting
+                        report(f"Page {page_num}: combining OCR results")
                         engine_tuples = [
                             (res.text, res.confidence) for res in ocr_results
                         ]
@@ -204,6 +223,7 @@ def convert(
 
         # 4. Linguistic correction & spell checking
         if page_text and (cfg.fix_dot_confusion or cfg.fix_spelling):
+            report(f"Page {page_num}: correcting spelling")
             try:
                 corrected, changes = correct_text(
                     page_text,
@@ -224,6 +244,7 @@ def convert(
                 logger.debug("Correction error on page %d: %s", page_num, e)
 
         # 5. Text post-processing (cleanup, normalization, tashkeel handling)
+        report(f"Page {page_num}: cleaning text")
         final_text = postprocess(
             page_text,
             preserve_diacritics=cfg.preserve_diacritics,
@@ -240,6 +261,7 @@ def convert(
                 flags=flags,
             )
         )
+        report(f"Page {page_num}: complete")
 
     # Combine full document text
     combined_text = "\n\n".join(

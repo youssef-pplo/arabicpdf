@@ -11,7 +11,7 @@ from arabicpdf.config import (
 )
 from arabicpdf.core import convert, to_text
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 __all__ = [
     "to_text",
